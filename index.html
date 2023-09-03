@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawlette | Collaborate on ideas.</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #fff;
+        }
+
+        h1 {
+            font-size: 22px;
+        }
+
+        canvas {
+            border: 2px solid black;
+            cursor: crosshair;
+            margin-bottom: 20px;
+            max-width: 100%; /* Make canvas responsive */
+            height: auto; /* Maintain aspect ratio */
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        input[type="color"] {
+            cursor: pointer;
+        }
+
+        /* Style the file input */
+        input[type="file"] {
+            display: none; /* Hide the file input */
+        }
+
+        /* Style the custom import button */
+        .custom-file-upload {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        /* Media query for smaller screens */
+        @media (max-width: 600px) {
+            canvas {
+                width: 100%;
+            }
+
+            .controls {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<h1>drawlette</h1>
+<h1>draw out your ideas!</h1>
+    <canvas id="drawingCanvas" width="600" height="400"></canvas>
+    <div class="controls">
+        <!-- Use a label to style the custom import button -->
+        <label for="imageInput" class="custom-file-upload">Import</label>
+        <input type="file" id="imageInput" accept="image/*"> <!-- Hidden file input -->
+        <button id="clearCanvas">Clear Canvas</button>
+        <button id="saveCanvas">Save</button>
+        <!-- Color Picker Button -->
+        <input type="color" id="colorPicker">
+    </div>
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const imageInput = document.getElementById('imageInput');
+        const clearCanvasBtn = document.getElementById('clearCanvas');
+        const saveCanvasBtn = document.getElementById('saveCanvas');
+        const colorPicker = document.getElementById('colorPicker'); // Color picker element
+
+        let isDrawing = false;
+
+        // Set up drawing styles
+        ctx.strokeStyle = '#000'; // Default color
+        ctx.lineWidth = 4;
+        ctx.lineJoin = 'round';
+        ctx.imageSmoothingEnabled = false;
+
+        // Update stroke color when color picker changes
+        colorPicker.addEventListener('input', () => {
+            ctx.strokeStyle = colorPicker.value;
+        });
+
+        // Drawing functionality
+        function startDrawing(e) {
+            isDrawing = true;
+            ctx.beginPath();
+            ctx.moveTo(getX(e), getY(e));
+        }
+
+        function continueDrawing(e) {
+            if (!isDrawing) return;
+            ctx.lineTo(getX(e), getY(e));
+            ctx.stroke();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', continueDrawing);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // Touch events for mobile drawing
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent scrolling on touch devices
+            startDrawing(e.touches[0]);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevent scrolling on touch devices
+            continueDrawing(e.touches[0]);
+        });
+
+        canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('touchcancel', stopDrawing);
+
+        function getX(e) {
+            if (e.type === 'touchmove' || e.type === 'touchstart') {
+                return e.targetTouches[0].pageX - canvas.getBoundingClientRect().left;
+            } else {
+                return e.offsetX;
+            }
+        }
+
+        function getY(e) {
+            if (e.type === 'touchmove' || e.type === 'touchstart') {
+                return e.targetTouches[0].pageY - canvas.getBoundingClientRect().top;
+            } else {
+                return e.offsetY;
+            }
+        }
+
+        // Image import functionality
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Clear canvas
+        clearCanvasBtn.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        // Save canvas
+        saveCanvasBtn.addEventListener('click', () => {
+            const savedImage = new Image();
+            savedImage.src = canvas.toDataURL('image/png');
+            savedImage.onload = () => {
+                const savedCanvas = document.createElement('canvas');
+                savedCanvas.width = canvas.width;
+                savedCanvas.height = canvas.height;
+                const savedCtx = savedCanvas.getContext('2d');
+                savedCtx.fillStyle = '#fff';
+                savedCtx.fillRect(0, 0, savedCanvas.width, savedCanvas.height);
+                savedCtx.drawImage(savedImage, 0, 0);
+                const downloadLink = document.createElement('a');
+                downloadLink.href = savedCanvas.toDataURL('image/png');
+                downloadLink.download = 'drawlette.png';
+                downloadLink.click();
+            };
+        });
+    </script>
+</body>
+</html>
