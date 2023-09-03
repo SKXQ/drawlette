@@ -152,7 +152,7 @@
 
         function getX(e) {
             if (e.type === 'touchmove' || e.type === 'touchstart') {
-                return e.targetTouches[0].pageX - canvas.getBoundingClientRect().left;
+                return e.touches[0].pageX - canvas.getBoundingClientRect().left;
             } else {
                 return e.offsetX;
             }
@@ -160,7 +160,7 @@
 
         function getY(e) {
             if (e.type === 'touchmove' || e.type === 'touchstart') {
-                return e.targetTouches[0].pageY - canvas.getBoundingClientRect().top;
+                return e.touches[0].pageY - canvas.getBoundingClientRect().top;
             } else {
                 return e.offsetY;
             }
